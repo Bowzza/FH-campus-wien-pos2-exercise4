@@ -3,22 +3,29 @@ package at.ac.fhcampuswien.newsanalyzer.ui;
 
 import at.ac.fhcampuswien.newsanalyzer.ctrl.Controller;
 import at.ac.fhcampuswien.newsanalyzer.ctrl.NewsAPIException;
+import at.ac.fhcampuswien.newsanalyzer.downloader.ParallelDownloader;
+import at.ac.fhcampuswien.newsanalyzer.downloader.SequentialDownloader;
 import at.ac.fhcampuswien.newsapi.NewsApi;
 import at.ac.fhcampuswien.newsapi.NewsApiBuilder;
+import at.ac.fhcampuswien.newsapi.beans.Article;
 import at.ac.fhcampuswien.newsapi.enums.Country;
 import at.ac.fhcampuswien.newsapi.enums.Endpoint;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserInterface {
+
+	private String searchQuery;
 
 	private Controller ctrl = new Controller();
 
 	public void getDataForCustomInput() {
 		System.out.println("Enter search query:");
-		String searchQuery = readLine();
+		searchQuery = readLine();
 		System.out.println("Enter amount of results (max 100):");
 		Double resultsAnmount = readDouble(0,100);
 		NewsApi newsApi = new NewsApiBuilder()
@@ -49,7 +56,35 @@ public class UserInterface {
 		menu.insert("z", "Sort by longest title", this::getSortArticlesByLongestTitle); // Exercise 3
 		menu.insert("g", "Download URLs", () -> {
 			//Todo
+			SequentialDownloader downloader = new SequentialDownloader();
+			ParallelDownloader parallelDownloader = new ParallelDownloader();
+			try {
+				parallelDownloader.process(ctrl.UrlToList());
+			} catch (NewsAPIException e) {
+				e.printStackTrace();
+			}
+
+//			try {
+//				downloader.process(ctrl.UrlToList());
+//			} catch (NewsAPIException e) {
+//				e.printStackTrace();
+//			}
 		});
+//		menu.insert("l", "Download last search", () -> {
+//			SequentialDownloader downloader = new SequentialDownloader();
+//			ParallelDownloader parallelDownloader = new ParallelDownloader();
+//			try {
+//				parallelDownloader.process(DownloadLastSearch());
+//			} catch (NewsAPIException e) {
+//				e.printStackTrace();
+//			}
+//
+//			try {
+//				downloader.process(DownloadLastSearch());
+//			} catch (NewsAPIException e) {
+//				e.printStackTrace();
+//			}
+//		});
 		menu.insert("q", "Quit", null);
 		Runnable choice;
 		while ((choice = menu.exec()) != null) {
@@ -90,6 +125,31 @@ public class UserInterface {
 			}
 		}
 		return number;
+	}
+
+	private List<String> DownloadLastSearch() throws NewsAPIException {
+		ArrayList<String> urlList = new ArrayList<>();
+		List<Article> articles = null;
+
+		NewsApi newsApi = new NewsApiBuilder()
+				.setApiKey(Controller.APIKEY)
+				.setQ(searchQuery)
+				.setEndPoint(Endpoint.EVERYTHING)
+				.setPageSize("100")
+				.createNewsApi();
+
+		articles = newsApi.getNews().getArticles();
+
+		for (Article article: articles) {
+			if(article.getUrl() != null) {
+				urlList.add((article.getUrl()));
+				//urlList.add(article.getUrlToImage());
+			}
+			if(article.getUrlToImage() != null) {
+				urlList.add(article.getUrlToImage());
+			}
+		}
+		return urlList;
 	}
 
 	/**

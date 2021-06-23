@@ -1,9 +1,6 @@
 package at.ac.fhcampuswien.newsanalyzer.downloader;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URL;
 import java.util.List;
 import java.util.Objects;
@@ -27,21 +24,29 @@ public abstract class Downloader {
             if (fileName.isEmpty()) {
                 fileName = url4download.getHost() + HTML_EXTENTION;
             }
+
             os = new FileOutputStream(DIRECTORY_DOWNLOAD + fileName);
+
+
 
             byte[] b = new byte[2048];
             int length;
             while ((length = is.read(b)) != -1) {
-                os.write(b, 0, length);
+                try {
+                    os.write(b, 0, length);
+                } catch(NullPointerException e) {
+                    System.out.println("File is not existing which should be written!");
+                }
+
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Input or Outstream might have an issue!");
         } finally {
             try {
                 Objects.requireNonNull(is).close();
                 Objects.requireNonNull(os).close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException | NullPointerException e) {
+                System.out.println("Something is wrong with the Input or Outputstream!");
             }
         }
         return fileName;

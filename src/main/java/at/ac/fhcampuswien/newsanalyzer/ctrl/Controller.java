@@ -1,9 +1,13 @@
 package at.ac.fhcampuswien.newsanalyzer.ctrl;
 
 import at.ac.fhcampuswien.newsapi.NewsApi;
+import at.ac.fhcampuswien.newsapi.NewsApiBuilder;
 import at.ac.fhcampuswien.newsapi.beans.Article;
 import at.ac.fhcampuswien.newsapi.beans.NewsResponse;
 import at.ac.fhcampuswien.newsapi.beans.Source;
+import at.ac.fhcampuswien.newsapi.enums.Endpoint;
+
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -83,5 +87,17 @@ public class Controller {
 				.max(Comparator.comparingInt(o -> o.getValue().size()))
 				.map(stringListEntry -> stringListEntry.getKey() + " " + stringListEntry.getValue().size())
 				.orElseThrow();
+	}
+
+	public List<String> UrlToList() throws NewsAPIException {
+		ArrayList<String> urlList = new ArrayList<>();
+
+		if(articles == null)
+			throw new NewsAPIException("Load data first");
+
+		articles.stream().filter(article -> article.getUrl() != null).forEach(article -> urlList.add(article.getUrl()));
+		articles.stream().filter(article -> article.getUrlToImage() != null).forEach(article -> urlList.add(article.getUrlToImage()));
+
+		return urlList;
 	}
 }
